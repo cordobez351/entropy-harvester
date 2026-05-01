@@ -39,7 +39,7 @@ body {
 .entropy-main {
   min-height: 100%;
   margin: 0 auto;
-  max-width: 720px;
+  max-width: 960px;
   padding: 20px 16px 40px;
 }
 
@@ -79,7 +79,8 @@ body {
 }
 
 .entropy-fluid-frame {
-  margin-bottom: 18px;
+  margin-bottom: 22px;
+  min-height: 280px;
 }
 
 .entropy-stats {

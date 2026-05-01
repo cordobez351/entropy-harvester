@@ -12,7 +12,7 @@ import {
 } from '../lib/fluid-smoke';
 import { Pool, hex, estBits } from '../lib/pool';
 
-const FONT_SMOKE = '400 10px "JetBrains Mono", monospace';
+const FONT_SMOKE = '400 12px "JetBrains Mono", monospace';
 
 /** Density → glyph (fluid-smoke style ramp) */
 const SMOKE_RAMP =
@@ -20,9 +20,14 @@ const SMOKE_RAMP =
 
 export const CORPUS = `Entropy is usable unpredictability—the surprise cryptography turns into keys and seeds; if it is guessable, everything above it fails. Post-quantum hardware and integration will concentrate in large institutions first; ENTROP is modest: it harvests animation-frame jitter in **your** browser, folds samples through SHA-256 into a pool you can watch, and offers a hex seed only when you copy—nothing is sent off-device by default. This does **not** replace your OS cryptographically secure RNG or defeat a quantum adversary on its own. Next: clearer quality estimates, optional sources you approve, stronger mixing, and blends with OS or hardware entropy so inspectable local noise scales beyond well-funded labs.`;
 
-const SMOKE_ROWS = 14;
-const SMOKE_LH = 11;
-const TYPO_RH = 18;
+/** Taller grid + dual serif bands — keep smoke ramp + pool-driven diffusion intact */
+const SMOKE_ROWS = 18;
+const SMOKE_LH = 13;
+const TYPO_FONT_PX = 13;
+const TYPO_ROW_H = 24;
+const SERIF_ROWS = 2;
+const SMOKE_BAND_PAD = 14;
+const TYPO_BAND_PAD = 12;
 
 type SerifGlyph = { ch: string; font: string; w: number };
 
@@ -32,7 +37,7 @@ function buildSerifPalette(): SerifGlyph[] {
   const out: SerifGlyph[] = [];
   for (const wt of weights) {
     for (const ch of chars) {
-      const font = `${wt} 11px "IBM Plex Serif", serif`;
+      const font = `${wt} ${TYPO_FONT_PX}px "IBM Plex Serif", serif`;
       const prep = prepareWithSegments(ch, font);
       out.push({ ch, font, w: measureNaturalWidth(prep) });
     }
@@ -123,9 +128,9 @@ export default function EntropyField() {
     let smoothFieldMax = 0.06;
     let layoutDpr = 1;
 
-    let smokeBandH = SMOKE_ROWS * SMOKE_LH + 10;
-    let typoBandH = TYPO_RH + 8;
-    const CANVAS_PAD = 14;
+    const smokeBandH = SMOKE_ROWS * SMOKE_LH + SMOKE_BAND_PAD;
+    const typoBandH = SERIF_ROWS * TYPO_ROW_H + TYPO_BAND_PAD;
+    const CANVAS_PAD = 18;
     const DECAY_HARVEST = 0.993;
     const DECAY_IDLE = 0.9976;
 
@@ -140,7 +145,7 @@ export default function EntropyField() {
 
       C2D.font = FONT_SMOKE;
       const cellW = Math.max(5.5, C2D.measureText('M').width);
-      const cols = Math.max(32, Math.min(100, Math.floor((w - 2 * CANVAS_PAD) / cellW)));
+      const cols = Math.max(40, Math.min(132, Math.floor((w - 2 * CANVAS_PAD) / cellW)));
       fluid = createFluid(cols, SMOKE_ROWS);
       smoothFieldMax = 0.06;
     }
@@ -223,9 +228,69 @@ export default function EntropyField() {
       }
     }
 
-    function drawSerifVariableRow(
+    function drawSmokeBandGuides(
       C: CanvasRenderingContext2D,
-      w: number,
+      pad: number,
+      innerW: number,
+    ) {
+      C.strokeStyle = 'rgba(251, 191, 36, 0.035)';
+      C.lineWidth = 1;
+      for (const frac of [0.32, 0.55, 0.78]) {
+        const y = pad + smokeBandH * frac;
+        C.beginPath();
+        C.moveTo(pad + 5, y);
+        C.lineTo(pad + innerW - 5, y);
+        C.stroke();
+      }
+    }
+
+    function drawSmokeSerifSeparator(C: CanvasRenderingContext2D, pad: number, innerW: number) {
+      const y = pad + smokeBandH - 9;
+      C.strokeStyle = 'rgba(251, 191, 36, 0.09)';
+      C.lineWidth = 1;
+      C.beginPath();
+      C.moveTo(pad + 10, y);
+      C.lineTo(pad + innerW - 10, y);
+      C.stroke();
+    }
+
+    function drawPanelAccents(
+      C: CanvasRenderingContext2D,
+      pad: number,
+      innerW: number,
+      innerTop: number,
+      innerBottom: number,
+    ) {
+      const tick = 8;
+      const corners: [number, number][] = [
+        [pad, innerTop],
+        [pad + innerW, innerTop],
+        [pad, innerBottom],
+        [pad + innerW, innerBottom],
+      ];
+      C.lineWidth = 1;
+      C.strokeStyle = 'rgba(251, 191, 36, 0.22)';
+      for (const [cx, cy] of corners) {
+        const sx = cx === pad ? 1 : -1;
+        const sy = cy === innerTop ? 1 : -1;
+        C.beginPath();
+        C.moveTo(cx, cy + sy * tick);
+        C.lineTo(cx, cy);
+        C.lineTo(cx + sx * tick, cy);
+        C.stroke();
+      }
+      const midY = (innerTop + innerBottom) * 0.5;
+      C.strokeStyle = 'rgba(251, 191, 36, 0.14)';
+      C.beginPath();
+      C.moveTo(pad - 3, midY);
+      C.lineTo(pad + 4, midY);
+      C.moveTo(pad + innerW - 4, midY);
+      C.lineTo(pad + innerW + 3, midY);
+      C.stroke();
+    }
+
+    function drawSerifVariableRows(
+      C: CanvasRenderingContext2D,
       pad: number,
       innerW: number,
       maxV: number,
@@ -233,21 +298,27 @@ export default function EntropyField() {
     ) {
       if (!fluid) return;
       const { cols, rows, a } = fluid;
-      const slots = Math.min(52, Math.max(24, Math.floor(innerW / 12)));
+      const slots = Math.min(68, Math.max(28, Math.floor(innerW / 10)));
       const slotW = innerW / slots;
-      const yr = Math.min(rows - 2, Math.max(1, rows - 4));
-      const baseline = pad + smokeBandH + TYPO_RH - 3;
 
-      for (let s = 0; s < slots; s++) {
-        const fx = 1 + Math.floor(((s + 0.5) / slots) * (cols - 2));
-        const fi = yr * cols + fx;
-        const raw = Math.min(1, a[fi] / maxV);
-        const g = pickSerifGlyph(serifPalette, slotW, raw);
-        const x = pad + s * slotW + (slotW - g.w) * 0.5;
-        C.font = g.font;
-        const hue = 36 + raw * 36 + (digest ? (digest[s % 32] / 255) * 14 : 0);
-        C.fillStyle = `hsla(${hue}, 36%, ${58 + raw * 30}%, ${0.42 + raw * 0.48})`;
-        C.fillText(g.ch, x, baseline);
+      for (let r = 0; r < SERIF_ROWS; r++) {
+        const yr = Math.min(rows - 2 - r * 2, Math.max(1, rows - 5 - r * 2));
+        const baseline = pad + smokeBandH + (r + 1) * TYPO_ROW_H - 7;
+        const hueShift = r * 12;
+        const alphaLo = r === 0 ? 0.42 : 0.34;
+        const alphaHi = r === 0 ? 0.48 : 0.42;
+
+        for (let s = 0; s < slots; s++) {
+          const fx = 1 + Math.floor(((s + 0.5 + r * 0.08) / slots) * (cols - 2));
+          const fi = yr * cols + Math.min(cols - 2, Math.max(1, fx));
+          const raw = Math.min(1, a[fi] / maxV);
+          const g = pickSerifGlyph(serifPalette, slotW, raw);
+          const x = pad + s * slotW + (slotW - g.w) * 0.5;
+          C.font = g.font;
+          const hue = 36 + raw * 36 + hueShift + (digest ? (digest[(s + r * 7) % 32] / 255) * 14 : 0);
+          C.fillStyle = `hsla(${hue}, 34%, ${56 + raw * 28}%, ${alphaLo + raw * (alphaHi - alphaLo)})`;
+          C.fillText(g.ch, x, baseline);
+        }
       }
     }
 
@@ -301,15 +372,28 @@ export default function EntropyField() {
         C.lineTo(x, canvas.height / layoutDpr);
         C.stroke();
       }
+      C.strokeStyle = 'rgba(251, 191, 36, 0.018)';
+      for (let x = 3; x < w; x += 18) {
+        C.beginPath();
+        C.moveTo(x, 0);
+        C.lineTo(x, canvas.height / layoutDpr);
+        C.stroke();
+      }
 
       C.fillStyle = 'rgba(10, 12, 22, 0.94)';
       C.fillRect(pad, pad, innerW, smokeBandH + typoBandH + 4);
 
       C.strokeStyle = 'rgba(251, 191, 36, 0.11)';
-      C.strokeRect(pad, pad - 1, innerW, smokeBandH + typoBandH + 6);
+      const panelTop = pad - 1;
+      const panelH = smokeBandH + typoBandH + 6;
+      C.strokeRect(pad, panelTop, innerW, panelH);
 
+      drawSmokeBandGuides(C, pad, innerW);
       drawSmokeAscii(C, w, pad, maxV, digest);
-      drawSerifVariableRow(C, w, pad, innerW, maxV, digest);
+      drawSmokeSerifSeparator(C, pad, innerW);
+      drawSerifVariableRows(C, pad, innerW, maxV, digest);
+
+      drawPanelAccents(C, pad, innerW, panelTop, panelTop + panelH);
 
       rafId = requestAnimationFrame(tick);
     };
