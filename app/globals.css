@@ -1,0 +1,151 @@
+:root {
+  --bg: #050608;
+  --fg: #e2e8f0;
+  --muted: #94a3b8;
+  --amber: #fbbf24;
+  --surface: #0c0e14;
+  --border: #1e293b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(1400px 900px at 50% -15%, #12151f 0%, var(--bg) 55%);
+  color: var(--fg);
+  font-family: var(--font-ibm), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.entropy-main {
+  min-height: 100%;
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 20px 16px 40px;
+}
+
+.entropy-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.entropy-banner {
+  margin: 0 0 10px;
+  font-family: var(--font-jb), ui-monospace, monospace;
+  font-size: clamp(9px, 1.45vw, 11px);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: var(--amber);
+  opacity: 0.92;
+  white-space: pre;
+  overflow-x: auto;
+  user-select: text;
+  cursor: text;
+}
+
+.entropy-prose {
+  margin: 0 0 20px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.68;
+  color: var(--fg);
+  user-select: text;
+  cursor: text;
+}
+
+.entropy-prose strong {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.entropy-fluid-frame {
+  margin-bottom: 18px;
+}
+
+.entropy-stats {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  user-select: text;
+}
+
+.entropy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.entropy-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--fg);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.entropy-btn:hover:not(:disabled) {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: #12151f;
+}
+
+.entropy-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.entropy-btn-primary {
+  border-color: rgba(251, 191, 36, 0.28);
+  color: var(--amber);
+}
+
+.entropy-btn-copy {
+  font-variant-numeric: tabular-nums;
+}
+
+.canvas-frame {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.entropy-canvas {
+  display: block;
+  width: 100%;
+  vertical-align: middle;
+}
+
+/* Fluid strip is pixels only — no fake affordance; selection happens on HTML prose */
+.entropy-fluid-canvas {
+  pointer-events: none;
+  cursor: default;
+}

@@ -1,0 +1,14 @@
+# Dependencies & build
+/node_modules
+/.next
+/out
+
+# Env & logs
+.env*.local
+*.log
+
+# Vercel CLI local link
+.vercel
+
+# IDE / OS
+.DS_Store
